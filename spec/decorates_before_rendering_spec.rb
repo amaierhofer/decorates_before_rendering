@@ -82,6 +82,28 @@ describe DecoratesBeforeRendering do
       end
     end
 
+    context "ivar's class has no decorator but base class has" do
+      class BaseClassButNoDecorator; end
+      it "should decorate and render" do
+        sentinel.should_receive(:render).with(args)
+        MyCompletelyFakeModelDecorator.should_receive(:decorate).with(ivar)
+        ivar.stub_chain(:class, :model_name => 'MyCompletelyExtendedFakeModel')
+        ivar.stub_chain(:class, :base_class, :model_name => 'MyCompletelyFakeModel')
+        klass.decorates(:ivar)
+        instance.render(args)
+      end
+
+      it "should decorate and render" do
+        ivar.stub_chain(:class, :model_name => 'MyCompletelyExtendedFakeModel')
+        ivar.stub_chain(:class, :base_class, :model_name => 'BaseClassButNoDecorator')
+        klass.decorates(:ivar)
+        expect {
+          instance.render(args)
+        }.to raise_error(ArgumentError)
+      end
+    end
+
+
     context "subclass inherits attributes" do
       it "should function correctly" do
         klass.decorates(:ivar)
