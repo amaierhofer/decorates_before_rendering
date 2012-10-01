@@ -43,12 +43,15 @@ private
   end
 
   def __decorator_name_for__(ivar)
+    org_ivar = ivar
     decorator_name = "#{__model_name_for__(ivar)}Decorator"
     while (decorator_name.constantize rescue nil) == nil
-      base_class = ivar.respond_to?(:model_name) ? ivar.base_class : ivar.class.base_class
-      base_class_decorator_name = "#{base_class.model_name}Decorator"
-      raise ArgumentError, "#{ivar} does not have an associated decorator" if decorator_name == base_class_decorator_name
-      decorator_name = base_class_decorator_name
+      superclass = ivar.respond_to?(:model_name) ? ivar.superclass : ivar.class.superclass
+      raise ArgumentError, "#{org_ivar} does not have an associated decorator" if superclass == Module
+      superclass_decorator_name = (superclass == Object ? "Object" : superclass.model_name)
+      superclass_decorator_name += "Decorator"
+      ivar = superclass
+      decorator_name = superclass_decorator_name
     end
     decorator_name
   end

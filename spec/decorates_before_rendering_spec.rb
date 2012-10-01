@@ -82,24 +82,62 @@ describe DecoratesBeforeRendering do
       end
     end
 
-    context "ivar's class has no decorator but base class has" do
-      class BaseClassButNoDecorator; end
-      it "should decorate and render" do
-        sentinel.should_receive(:render).with(args)
-        MyCompletelyFakeModelDecorator.should_receive(:decorate).with(ivar)
-        ivar.stub_chain(:class, :model_name => 'MyCompletelyExtendedFakeModel')
-        ivar.stub_chain(:class, :base_class, :model_name => 'MyCompletelyFakeModel')
-        klass.decorates(:ivar)
-        instance.render(args)
+    context "decorates via superclass" do
+      class MyCompletelyFakeModel
+        def self.model_name
+          self.name
+        end
       end
 
-      it "should decorate and render" do
-        ivar.stub_chain(:class, :model_name => 'MyCompletelyExtendedFakeModel')
-        ivar.stub_chain(:class, :base_class, :model_name => 'BaseClassButNoDecorator')
-        klass.decorates(:ivar)
-        expect {
+      class Foo < MyCompletelyFakeModel; end
+      class Bar < Foo; end
+      class Baz
+        def self.model_name
+          self.name
+        end
+      end
+      class Blubb < Baz; end
+
+      context "foo" do
+        let(:ivar) { Foo.new }
+        it "foo" do
+          sentinel.should_receive(:render).with(args)
+          MyCompletelyFakeModelDecorator.should_receive(:decorate).with(ivar)
+          klass.decorates(:ivar)
           instance.render(args)
-        }.to raise_error(ArgumentError)
+        end
+      end
+
+      context "bar" do
+        let(:ivar) { Bar.new }
+        it "foo" do
+          sentinel.should_receive(:render).with(args)
+          MyCompletelyFakeModelDecorator.should_receive(:decorate).with(ivar)
+          klass.decorates(:ivar)
+          instance.render(args)
+        end
+      end
+
+      context "baz" do
+        let(:ivar) { Baz.new }
+        it "foo" do
+          klass.decorates(:ivar)
+          expect {
+            instance.render(args)
+          }.to raise_error(ArgumentError)
+        end
+      end
+
+
+     context "object decorator" do
+        let(:ivar) { Baz.new }
+        it "foo" do
+          sentinel.should_receive(:render).with(args)
+          class ObjectDecorator; end
+          ObjectDecorator.should_receive(:decorate).with(ivar)
+          klass.decorates(:ivar)
+          instance.render(args)
+        end
       end
     end
 
